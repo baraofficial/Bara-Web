@@ -1,0 +1,6 @@
+{
+  "name": "AetherWeb AI - Web Builder & Chat",
+  "description": "AI generator website instan dengan live preview interaktif dan asisten chat serba bisa bertema hitam dan biru bersih tanpa efek glow.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
