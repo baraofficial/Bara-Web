@@ -3,22 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { StudioWeb } from './components/StudioWeb';
 import { ChatAssistant } from './components/ChatAssistant';
 import { TemplateModal } from './components/TemplateModal';
+import { MyWebsitesModal } from './components/MyWebsitesModal';
 import { 
   SystemPromptModal, 
   DEFAULT_WEBSITE_PROMPT, 
   DEFAULT_CHAT_PROMPT 
 } from './components/SystemPromptModal';
-import { SAMPLE_TEMPLATES } from './data/templates';
+import { SAMPLE_TEMPLATES, createDefaultProjectFiles } from './data/templates';
 import { AppMode, ChatMessage, WebsiteProject, PromptTemplate, SystemPrompts, UploadedImage } from './types';
 
 export default function App() {
   const [currentMode, setCurrentMode] = useState<AppMode>('studio');
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isMyWebsitesModalOpen, setIsMyWebsitesModalOpen] = useState(false);
   const [isSystemPromptModalOpen, setIsSystemPromptModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isChatting, setIsChatting] = useState(false);
@@ -56,7 +58,9 @@ export default function App() {
     summary: 'Platform SaaS manajemen tugas berbasis AI dengan arsitektur full-stack: backend Python FastAPI, server Node.js Express, skema SQL relasional, dan frontend Tailwind CSS.',
     html: SAMPLE_TEMPLATES[0].sampleHtml,
     techStack: SAMPLE_TEMPLATES[0].techStack,
-    files: SAMPLE_TEMPLATES[0].files,
+    files: SAMPLE_TEMPLATES[0].files && SAMPLE_TEMPLATES[0].files.length > 0 
+      ? SAMPLE_TEMPLATES[0].files 
+      : createDefaultProjectFiles(SAMPLE_TEMPLATES[0].title, SAMPLE_TEMPLATES[0].sampleHtml),
     sections: ['Header', 'Hero', 'Interactive Dashboard', 'Fitur', 'Tabel Harga', 'Modal Trial', 'Footer'],
     suggestions: [
       'Tambahkan integrasi webhook API di server Python main.py',
@@ -67,7 +71,29 @@ export default function App() {
   };
 
   const [currentProject, setCurrentProject] = useState<WebsiteProject | null>(initialProject);
-  const [projectHistory, setProjectHistory] = useState<WebsiteProject[]>([initialProject]);
+  const [projectHistory, setProjectHistory] = useState<WebsiteProject[]>(() => {
+    try {
+      const saved = localStorage.getItem('baraweb_project_history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return [initialProject];
+  });
+
+  // Sync project history to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('baraweb_project_history', JSON.stringify(projectHistory));
+    } catch {
+      // ignore
+    }
+  }, [projectHistory]);
 
   // Initial chat history
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -241,6 +267,28 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  // Delete project from history
+  const handleDeleteProject = (projectId: string) => {
+    const updated = projectHistory.filter((p) => p.id !== projectId);
+    setProjectHistory(updated);
+    if (currentProject?.id === projectId) {
+      setCurrentProject(updated.length > 0 ? updated[0] : null);
+    }
+  };
+
+  // Download specific project from MyWebsites modal
+  const handleDownloadProject = (project: WebsiteProject) => {
+    const blob = new Blob([project.html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'website'}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Template select handler
   const handleSelectTemplate = (template: PromptTemplate) => {
     const tplProject: WebsiteProject = {
@@ -249,7 +297,9 @@ export default function App() {
       prompt: template.prompt,
       summary: template.description,
       html: template.sampleHtml,
-      files: template.files,
+      files: template.files && template.files.length > 0 
+        ? template.files 
+        : createDefaultProjectFiles(template.title, template.sampleHtml),
       techStack: template.techStack,
       sections: ['Header', 'Hero', 'Fitur Interaktif', 'Katalog / Harga', 'Footer'],
       suggestions: [
@@ -272,16 +322,18 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-slate-100 flex flex-col font-sans select-none antialiased">
+    <div className="h-screen h-[100dvh] max-h-screen w-full bg-black text-slate-100 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* Top Navbar dengan Ikon Garis 3 Ditumpuk di Pojok Kiri Atas */}
       <Navbar
         currentMode={currentMode}
         onSelectMode={setCurrentMode}
         onOpenTemplates={() => setIsTemplateModalOpen(true)}
+        onOpenMyWebsites={() => setIsMyWebsitesModalOpen(true)}
         onDownloadHtml={handleDownloadHtml}
         onResetProject={() => setCurrentProject(null)}
         onOpenSystemPrompt={() => setIsSystemPromptModalOpen(true)}
         hasWebsite={Boolean(currentProject)}
+        websitesCount={projectHistory.length}
       />
 
       {/* Main View Area */}
@@ -312,6 +364,21 @@ export default function App() {
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         onSelectTemplate={handleSelectTemplate}
+      />
+
+      {/* Web Saya Modal (Melihat Semua Website yang Dibuat oleh AI) */}
+      <MyWebsitesModal
+        isOpen={isMyWebsitesModalOpen}
+        onClose={() => setIsMyWebsitesModalOpen(false)}
+        projects={projectHistory}
+        currentProjectId={currentProject?.id}
+        onSelectProject={(project) => {
+          setCurrentProject(project);
+          setCurrentMode('studio');
+          setIsMyWebsitesModalOpen(false);
+        }}
+        onDeleteProject={handleDeleteProject}
+        onDownloadProject={handleDownloadProject}
       />
 
       {/* System Prompt Customizer Modal */}

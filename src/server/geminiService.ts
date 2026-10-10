@@ -21,6 +21,11 @@ PERATURAN PENTING KODE:
    - "package.json" (Pustaka Node.js: express, cors, dotenv)
    - "README.md" (Panduan menjalankan server Python atau Node.js)
 3. Desain visual harus modern, profesional, bersih, bertema hitam dan biru solid TANPA EFEK GLOW / BLOOM.
+4. Desain WAJIB 100% responsif mobile-first:
+   - Wajib mencantumkan <meta name="viewport" content="width=device-width, initial-scale=1.0"> di dalam <head>.
+   - Tipografi responsif (contoh judul hero: text-2xl sm:text-4xl md:text-5xl, jangan gunakan ukuran statis raksasa tanpa breakpoint mobile).
+   - Padding responsif (px-4 sm:px-6, py-8 sm:py-16) dan navbar tidak boleh terpotong atau wrap berantakan di layar kecil HP (gunakan whitespace-nowrap dan shrink-0).
+   - Hindari lebar statis tetap (gunakan max-w-full w-full mx-auto) agar tidak ada elemen yang meluap ke samping.
 
 Format output WAJIB JSON:
 {

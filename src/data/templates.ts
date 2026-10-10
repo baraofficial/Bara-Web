@@ -199,12 +199,12 @@ export const SAMPLE_TEMPLATES: PromptTemplate[] = [
 
   <!-- Header -->
   <header class="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-none">
-          <i data-lucide="zap" class="w-5 h-5"></i>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-none shrink-0">
+          <i data-lucide="zap" class="w-4 h-4 sm:w-5 sm:h-5"></i>
         </div>
-        <span class="font-bold text-lg tracking-tight text-white">Task<span class="text-blue-500">Flow</span> AI</span>
+        <span class="font-bold text-base sm:text-lg tracking-tight text-white whitespace-nowrap">Task<span class="text-blue-500">Flow</span> AI</span>
       </div>
 
       <nav class="hidden md:flex items-center gap-8 text-sm text-slate-300">
@@ -214,9 +214,9 @@ export const SAMPLE_TEMPLATES: PromptTemplate[] = [
         <a href="#faq" class="hover:text-blue-400 transition-colors">FAQ</a>
       </nav>
 
-      <div class="flex items-center gap-3">
-        <button class="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors">Masuk</button>
-        <button onclick="document.getElementById('cta-modal').classList.remove('hidden')" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors">
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <button class="hidden sm:inline-block px-3 py-1.5 text-xs sm:text-sm text-slate-300 hover:text-white transition-colors">Masuk</button>
+        <button onclick="document.getElementById('cta-modal').classList.remove('hidden')" class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors whitespace-nowrap">
           Coba Gratis
         </button>
       </div>
@@ -224,15 +224,15 @@ export const SAMPLE_TEMPLATES: PromptTemplate[] = [
   </header>
 
   <!-- Hero Section -->
-  <section class="pt-20 pb-16 px-6 max-w-7xl mx-auto text-center">
-    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-900 bg-blue-950/60 text-blue-400 text-xs font-semibold mb-6">
-      <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-      TaskFlow 2.0 Kini Hadir dengan Smart Automation
+  <section class="pt-8 sm:pt-16 pb-10 sm:pb-16 px-4 sm:px-6 max-w-7xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-900 bg-blue-950/60 text-blue-400 text-[11px] sm:text-xs font-semibold mb-4 sm:mb-6 max-w-full truncate">
+      <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+      <span class="truncate">TaskFlow 2.0 Kini Hadir dengan Smart Automation</span>
     </div>
-    <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight max-w-4xl mx-auto">
-      Kelola Proyek & Tugas Tim dengan <span class="text-blue-500">Kekuatan Kecerdasan Buatan</span>
+    <h1 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight max-w-4xl mx-auto">
+      Kelola Proyek & Tugas Tim dengan <span class="text-blue-500">Kekuatan AI</span>
     </h1>
-    <p class="mt-6 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+    <p class="mt-4 sm:mt-6 text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
       Tingkatkan produktivitas tim hingga 300%. Otomatisasi pembagian tugas, analisis timeline cerdas, dan sinkronisasi lintas divisi secara instan.
     </p>
 

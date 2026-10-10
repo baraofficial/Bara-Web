@@ -1,9 +1,17 @@
 @import "tailwindcss";
 
 @layer base {
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000000;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #030712;
     color: #f1f5f9;
   }
 }
@@ -26,4 +34,67 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2563eb;
+}
+
+/* Vibrant Prism Syntax Highlighting Styles */
+.token.comment, 
+.token.prolog, 
+.token.doctype, 
+.token.cdata {
+  color: #64748b !important;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #94a3b8 !important;
+}
+
+.token.tag, 
+.token.deleted {
+  color: #f43f5e !important;
+  font-weight: 600;
+}
+
+.token.attr-name {
+  color: #38bdf8 !important;
+}
+
+.token.attr-value, 
+.token.string, 
+.token.char {
+  color: #4ade80 !important;
+}
+
+.token.keyword, 
+.token.selector, 
+.token.atrule {
+  color: #c084fc !important;
+  font-weight: 600;
+}
+
+.token.function, 
+.token.function-name {
+  color: #60a5fa !important;
+}
+
+.token.boolean, 
+.token.number {
+  color: #fb923c !important;
+}
+
+.token.property, 
+.token.class-name, 
+.token.constant {
+  color: #facc15 !important;
+}
+
+.token.operator, 
+.token.entity, 
+.token.url {
+  color: #22d3ee !important;
+}
+
+.token.regex, 
+.token.variable {
+  color: #e879f9 !important;
 }

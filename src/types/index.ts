@@ -12,6 +12,17 @@ export interface ChatMessage {
   image?: string;
 }
 
+export interface StudioChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  content: string;
+  timestamp: number;
+  image?: string;
+  version?: number;
+  sections?: string[];
+  suggestions?: string[];
+}
+
 export interface ProjectFile {
   name: string;
   language: 'html' | 'python' | 'javascript' | 'typescript' | 'json' | 'sql' | 'markdown' | 'text';
@@ -34,7 +45,7 @@ export interface WebsiteProject {
 }
 
 export type ViewportMode = 'desktop' | 'tablet' | 'mobile';
-export type StudioTab = 'preview' | 'code';
+export type StudioTab = 'chat' | 'preview' | 'code' | 'split';
 export type AppMode = 'studio' | 'chat';
 
 export interface PromptTemplate {

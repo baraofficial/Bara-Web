@@ -95,7 +95,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] bg-black text-slate-100 overflow-hidden">
+    <div className="flex-1 min-h-0 w-full h-full flex flex-col bg-black text-slate-100 overflow-hidden">
       {/* Chat Header (Tulisan asisten percakapan AI sampai tanya jawab umum telah dihapus sesuai permintaan) */}
       <div className="h-12 border-b border-slate-800 bg-slate-950 px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">

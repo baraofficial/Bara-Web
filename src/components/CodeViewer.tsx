@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Copy, 
   Check, 
@@ -11,10 +11,19 @@ import {
   FileText,
   Package,
   Globe,
-  Sparkles,
-  Layers
+  Eye,
+  Edit3,
+  Sparkles
 } from 'lucide-react';
 import JSZip from 'jszip';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-markup';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-sql';
+import 'prismjs/components/prism-json';
+import 'prismjs/themes/prism-tomorrow.css';
 import { ProjectFile } from '../types';
 
 interface CodeViewerProps {
@@ -49,6 +58,11 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
   const [copied, setCopied] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
   const [dirtyFiles, setDirtyFiles] = useState<Record<string, boolean>>({});
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Refs for scrolling synchronization in edit mode
+  const editLineNumbersRef = useRef<HTMLDivElement>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync state when files or code change
   useEffect(() => {
@@ -68,6 +82,39 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
   const activeFile = projectFiles.find((f) => f.name === activeFileName) || projectFiles[0];
   const currentContent = fileContents[activeFileName] ?? activeFile?.content ?? '';
 
+  // Determine Prism language based on filename extension
+  const getPrismLanguage = (fileName: string): string => {
+    if (fileName.endsWith('.html') || fileName.endsWith('.htm') || fileName.endsWith('.xml') || fileName.endsWith('.svg')) return 'markup';
+    if (fileName.endsWith('.py')) return 'python';
+    if (fileName.endsWith('.js') || fileName.endsWith('.ts') || fileName.endsWith('.jsx') || fileName.endsWith('.tsx')) return 'javascript';
+    if (fileName.endsWith('.css')) return 'css';
+    if (fileName.endsWith('.sql')) return 'sql';
+    if (fileName.endsWith('.json')) return 'json';
+    return 'markup';
+  };
+
+  const currentLanguage = getPrismLanguage(activeFileName);
+
+  // Pre-highlight code using Prism
+  const highlightedCodeHtml = useMemo(() => {
+    try {
+      const grammar = Prism.languages[currentLanguage] || Prism.languages.markup;
+      return Prism.highlight(currentContent, grammar, currentLanguage);
+    } catch {
+      return currentContent
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  }, [currentContent, currentLanguage]);
+
+  const lineCount = useMemo(() => {
+    return currentContent.split('\n').length;
+  }, [currentContent]);
+
+  const charCount = currentContent.length;
+  const isDirty = dirtyFiles[activeFileName] || false;
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(currentContent);
@@ -86,6 +133,13 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
       onUpdateFile(activeFileName, currentContent);
     }
     setDirtyFiles((prev) => ({ ...prev, [activeFileName]: false }));
+  };
+
+  // Synchronize scrolling in edit mode: when user scrolls textarea, scroll line numbers
+  const handleEditScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (editLineNumbersRef.current) {
+      editLineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
   };
 
   // Download entire full-stack project as ZIP
@@ -149,12 +203,8 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
     return 'Text';
   };
 
-  const lineCount = currentContent.split('\n').length;
-  const charCount = currentContent.length;
-  const isDirty = dirtyFiles[activeFileName] || false;
-
   return (
-    <div className="flex flex-col h-full bg-black border border-slate-800 rounded-xl overflow-hidden">
+    <div className="flex flex-col h-full w-full min-h-0 bg-black border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
       {/* File Tabs Explorer Bar */}
       <div className="bg-slate-950 border-b border-slate-800 px-3 py-2 flex items-center justify-between gap-2 overflow-x-auto shrink-0 select-none">
         <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
@@ -188,32 +238,59 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors"
           >
             <FolderArchive className="w-3.5 h-3.5" />
-            <span>{isZipping ? 'Mengepak...' : 'Download ZIP Proyek'}</span>
+            <span className="hidden sm:inline">{isZipping ? 'Mengepak...' : 'Download ZIP Proyek'}</span>
+            <span className="sm:hidden">{isZipping ? 'ZIP...' : 'ZIP'}</span>
           </button>
         </div>
       </div>
 
       {/* Active File Toolbar */}
-      <div className="h-10 bg-slate-950/80 border-b border-slate-900 px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="min-h-10 bg-slate-950/90 border-b border-slate-900 px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-950 border border-blue-900 text-blue-400 font-semibold">
             {getLanguageBadge(activeFileName)}
           </span>
           {activeFile?.description && (
-            <span className="text-[11px] text-slate-400 hidden md:inline truncate max-w-md">
+            <span className="text-[11px] text-slate-400 hidden md:inline truncate max-w-xs">
               {activeFile.description}
             </span>
           )}
-          <span className="text-[11px] text-slate-600 font-mono">
+          <span className="text-[11px] text-slate-500 font-mono">
             {lineCount} baris &bull; {(charCount / 1024).toFixed(1)} KB
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          {/* Toggle Mode: Berwarna (Highlight) vs Edit Kode */}
+          <button
+            onClick={() => setIsEditMode((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              isEditMode
+                ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-sm'
+                : 'bg-blue-950/80 hover:bg-blue-900/80 text-blue-300 border border-blue-800/80'
+            }`}
+            title={isEditMode ? 'Beralih ke mode lihat kode berwarna' : 'Beralih ke mode edit teks'}
+          >
+            {isEditMode ? (
+              <>
+                <Eye className="w-3.5 h-3.5 text-amber-200" />
+                <span>Mode Berwarna</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-white font-medium">Berwarna (Aktif)</span>
+                <span className="text-slate-400 text-[10px] hidden xs:inline border-l border-blue-800 pl-1.5">Klik utk Edit</span>
+              </>
+            )}
+          </button>
+
+          {/* Tombol Simpan & Terapkan bila ada editan */}
           {isDirty && (
             <button
               onClick={handleApplyChanges}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-colors animate-pulse"
+              title="Terapkan perubahan ke pratinjau live"
             >
               <Play className="w-3 h-3" />
               <span>Simpan & Terapkan</span>
@@ -222,12 +299,12 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded text-xs transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-lg text-xs transition-colors"
           >
             {copied ? (
               <>
-                <Check className="w-3 h-3 text-blue-400" />
-                <span className="text-blue-400">Tersalin</span>
+                <Check className="w-3 h-3 text-emerald-400" />
+                <span className="text-emerald-400">Tersalin</span>
               </>
             ) : (
               <>
@@ -240,38 +317,78 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
           <button
             onClick={handleDownloadActiveFile}
             title={`Unduh file ${activeFileName}`}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded text-xs transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-lg text-xs transition-colors"
           >
             <Download className="w-3 h-3 text-blue-400" />
-            <span>Unduh File Ini</span>
+            <span className="hidden xs:inline">Unduh</span>
           </button>
         </div>
       </div>
 
-      {/* Code Editor Body */}
-      <div className="flex-1 relative overflow-hidden flex bg-black">
-        {/* Line Numbers */}
-        <div className="w-12 bg-slate-950/80 border-r border-slate-900 py-3 text-right pr-3 select-none text-[12px] font-mono text-slate-600 overflow-hidden shrink-0">
-          {Array.from({ length: Math.min(lineCount, 600) }).map((_, i) => (
-            <div key={i} className="leading-6">
-              {i + 1}
+      {/* Code Editor / Viewer Body */}
+      <div className="flex-1 min-h-0 w-full relative overflow-hidden bg-black flex">
+        {!isEditMode ? (
+          /* MODE BERWARNA (Syntax Highlighted dengan sinkronisasi gulir nomor baris & kode) */
+          <div 
+            className="flex-1 w-full h-full overflow-auto bg-black flex relative font-mono text-xs select-text"
+          >
+            {/* Kolom Nomor Baris (Sticky di kiri, ikut tergulir vertikal saat user gulir kode ke bawah) */}
+            <div 
+              className="sticky left-0 top-0 self-start z-10 flex flex-col py-3 select-none text-right font-mono text-slate-600 bg-slate-950 border-r border-slate-900 shrink-0"
+              style={{ minHeight: '100%' }}
+            >
+              {Array.from({ length: lineCount }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className="leading-6 text-[11px] sm:text-xs h-6 px-2.5 sm:px-3 min-w-[2.75rem] sm:min-w-[3.25rem] text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  {i + 1}
+                </div>
+              ))}
             </div>
-          ))}
-          {lineCount > 600 && <div className="text-[10px] text-slate-700">...</div>}
-        </div>
 
-        {/* Textarea Code */}
-        <textarea
-          value={currentContent}
-          onChange={(e) => {
-            const val = e.target.value;
-            setFileContents((prev) => ({ ...prev, [activeFileName]: val }));
-            setDirtyFiles((prev) => ({ ...prev, [activeFileName]: true }));
-          }}
-          spellCheck={false}
-          className="flex-1 w-full h-full bg-black text-slate-200 font-mono text-xs p-3 leading-6 resize-none focus:outline-none focus:ring-0 selection:bg-blue-800 selection:text-white"
-          placeholder="Kode sumber file akan muncul di sini..."
-        />
+            {/* Blok Kode Berwarna (Prism Syntax Highlighting) */}
+            <pre 
+              tabIndex={0}
+              className="py-3 px-3 sm:px-4 m-0 flex-1 min-w-max font-mono text-xs leading-6 bg-transparent overflow-visible text-slate-200 outline-none"
+            >
+              <code 
+                className={`language-${currentLanguage}`}
+                dangerouslySetInnerHTML={{ __html: highlightedCodeHtml }}
+              />
+            </pre>
+          </div>
+        ) : (
+          /* MODE EDIT (Textarea editable dengan nomor baris yang ikut tergulir serentak) */
+          <div className="flex-1 w-full h-full min-h-0 relative overflow-hidden flex bg-black">
+            {/* Nomor Baris di Mode Edit (Tergulir bersamaan dengan textarea) */}
+            <div 
+              ref={editLineNumbersRef}
+              className="w-11 sm:w-13 bg-slate-950 border-r border-slate-900 py-3 text-right pr-2 sm:pr-3 select-none text-[11px] sm:text-xs font-mono text-slate-500 overflow-hidden shrink-0 pointer-events-none"
+            >
+              {Array.from({ length: lineCount }).map((_, i) => (
+                <div key={i} className="leading-6 h-6">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+
+            {/* Textarea Kode */}
+            <textarea
+              ref={editTextareaRef}
+              value={currentContent}
+              onScroll={handleEditScroll}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFileContents((prev) => ({ ...prev, [activeFileName]: val }));
+                setDirtyFiles((prev) => ({ ...prev, [activeFileName]: true }));
+              }}
+              spellCheck={false}
+              className="flex-1 w-full h-full bg-black text-slate-100 font-mono text-xs p-3 leading-6 resize-none focus:outline-none focus:ring-0 selection:bg-blue-800 selection:text-white overflow-auto"
+              placeholder="Ketik atau edit kode file di sini..."
+            />
+          </div>
+        )}
       </div>
     </div>
   );

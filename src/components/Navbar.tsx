@@ -8,7 +8,8 @@ import {
   Download, 
   RotateCcw,
   LayoutGrid,
-  Check
+  Check,
+  Globe
 } from 'lucide-react';
 import { AppMode } from '../types';
 
@@ -16,20 +17,24 @@ interface NavbarProps {
   currentMode: AppMode;
   onSelectMode: (mode: AppMode) => void;
   onOpenTemplates: () => void;
+  onOpenMyWebsites: () => void;
   onDownloadHtml: () => void;
   onResetProject: () => void;
   onOpenSystemPrompt: () => void;
   hasWebsite: boolean;
+  websitesCount?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentMode,
   onSelectMode,
   onOpenTemplates,
+  onOpenMyWebsites,
   onDownloadHtml,
   onResetProject,
   onOpenSystemPrompt,
   hasWebsite,
+  websitesCount = 0,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -56,6 +61,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleOpenTemplates = () => {
     onOpenTemplates();
+    setIsMenuOpen(false);
+  };
+
+  const handleOpenMyWebsites = () => {
+    onOpenMyWebsites();
     setIsMenuOpen(false);
   };
 
@@ -136,6 +146,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <span className="text-[10px] text-blue-400 bg-blue-950 px-1.5 py-0.5 rounded border border-blue-900">
                   Koleksi
+                </span>
+              </button>
+
+              {/* Tombol 4: Web Saya (Di bawah Template Desain untuk melihat semua website buatan AI) */}
+              <button
+                onClick={handleOpenMyWebsites}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 transition-colors mb-1"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Globe className="w-4 h-4 text-blue-400" />
+                  <span>Web Saya</span>
+                </div>
+                <span className="text-[10px] text-blue-400 bg-blue-950 px-1.5 py-0.5 rounded border border-blue-900">
+                  {websitesCount} Web
                 </span>
               </button>
 
